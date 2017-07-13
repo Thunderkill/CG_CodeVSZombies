@@ -1,0 +1,5 @@
+c:\users\thunder\documents\visual studio 2017\Projects\CodeVSZombies\CodeVSZombies\bin\Debug\CodeVSZombies.exe.config
+c:\users\thunder\documents\visual studio 2017\Projects\CodeVSZombies\CodeVSZombies\bin\Debug\CodeVSZombies.exe
+c:\users\thunder\documents\visual studio 2017\Projects\CodeVSZombies\CodeVSZombies\bin\Debug\CodeVSZombies.pdb
+c:\users\thunder\documents\visual studio 2017\Projects\CodeVSZombies\CodeVSZombies\obj\Debug\CodeVSZombies.exe
+c:\users\thunder\documents\visual studio 2017\Projects\CodeVSZombies\CodeVSZombies\obj\Debug\CodeVSZombies.pdb
