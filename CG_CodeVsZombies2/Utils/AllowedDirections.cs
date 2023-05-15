@@ -14,6 +14,7 @@ namespace CG_CodeVsZombies2.Utils
 
         public static Location[] Get = new[]
         {
+            new Location(0, 0), // Stay
             new Location(1000, 0), // Right
             new Location((int)Math.Round(1000 * Math.Cos(Math.PI / 4)),
                 (int)Math.Round(1000 * Math.Sin(Math.PI / 4))), // Upper right

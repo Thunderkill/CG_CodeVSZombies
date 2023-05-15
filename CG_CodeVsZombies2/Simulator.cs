@@ -5,16 +5,14 @@ namespace CG_CodeVsZombies2
 {
     public class Simulator
     {
-        public static Game Simulate(Game startingPosition, ILocatable playerTarget)
+        public static void Simulate(ref Game game, ILocatable playerTarget)
         {
-            var newGame = startingPosition.Clone();
-
             // 1. First we move the zombies towards the closest human or player
-            foreach (var zombie in newGame.Zombies.Values)
+            foreach (var zombie in game.Zombies.Values)
             {
                 double closestDist = double.MaxValue;
                 ILocatable closestEntity = default;
-                foreach (var human in newGame.Humans.Values)
+                foreach (var human in game.Humans.Values)
                 {
                     var dist = DistanceUtils.FastDistanceTo(zombie, human);
                     if (dist < closestDist)
@@ -24,13 +22,13 @@ namespace CG_CodeVsZombies2
                     }
                 }
 
-                var playerDist = DistanceUtils.FastDistanceTo(newGame.Player, zombie);
+                var playerDist = DistanceUtils.FastDistanceTo(game.Player, zombie);
                 if (playerDist < closestDist)
                 {
-                    closestEntity = newGame.Player;
+                    closestEntity = game.Player;
                 }
 
-                if (Math.Sqrt(closestDist) < 400)
+                if (closestDist < 160000)
                 {
                     zombie.X = closestEntity!.X;
                     zombie.Y = closestEntity!.Y;
@@ -42,55 +40,53 @@ namespace CG_CodeVsZombies2
             }
 
             // 2. Move the player
-            if (DistanceUtils.DistanceTo(newGame.Player, playerTarget) < 1000)
+            if (DistanceUtils.FastDistanceTo(game.Player, playerTarget) < 1000000)
             {
-                newGame.Player.X = playerTarget.X;
-                newGame.Player.Y = playerTarget.Y;
+                game.Player.X = playerTarget.X;
+                game.Player.Y = playerTarget.Y;
             }
             else
             {
-                EntityUtils.MoveTowards(newGame.Player, playerTarget, 1000);
+                EntityUtils.MoveTowards(game.Player, playerTarget, 1000);
             }
 
 
             // 3. Kill the zombies that are close to the player
             var zombiesKilled = 0;
-            foreach (var zombie in newGame.Zombies.Values)
+            foreach (var zombie in game.Zombies.Values)
             {
-                var dist = DistanceUtils.DistanceTo(newGame.Player, zombie);
-                if (dist > 2000) continue;
+                var dist = DistanceUtils.FastDistanceTo(game.Player, zombie);
+                if (dist > 4000000) continue;
 
-                newGame.Score += newGame.Humans.Count * newGame.Humans.Count * 10 *
-                                 NumberUtils.Fibonacci(zombiesKilled + 2);
-                newGame.Zombies.Remove(zombie.Id);
+                game.Score += game.Humans.Count * game.Humans.Count * 10 *
+                              NumberUtils.Fibonacci(zombiesKilled + 2);
+                game.Zombies.Remove(zombie.Id);
                 zombiesKilled++;
             }
 
             // 4. Kill all the humans that are close to the zombies
-            foreach (var zombie in newGame.Zombies.Values)
+            foreach (var zombie in game.Zombies.Values)
             {
-                foreach (var human in newGame.Humans.Values)
+                foreach (var human in game.Humans.Values)
                 {
                     if (zombie.X == human.X && zombie.Y == human.Y)
                     {
-                        newGame.Humans.Remove(human.Id);
+                        game.Humans.Remove(human.Id);
                     }
                 }
             }
 
-            if (newGame.Zombies.Count == 0)
+            if (game.Humans.Count == 0)
             {
-                newGame.GameEnded = true;
-                newGame.EndReason = Game.GameEndReason.PlayerWin;
+                game.GameEnded = true;
+                game.PlayerWon = false;
             }
 
-            if (newGame.Humans.Count == 0)
+            if (game.Zombies.Count == 0)
             {
-                newGame.GameEnded = true;
-                newGame.EndReason = Game.GameEndReason.ZombiesWin;
+                game.GameEnded = true;
+                game.PlayerWon = true;
             }
-
-            return newGame;
         }
     }
 }

@@ -10,7 +10,7 @@ public Dictionary<int, Zombie> Zombies { get; set; }
 public Dictionary<int, Human> Humans { get; set; }
 public int Score { get; set; }
 public bool GameEnded { get; set; }
-public GameEndReason EndReason { get; set; }
+public bool PlayerWon { get; set; }
 public Player Player { get; set; }
 public Game(Player player)
 {
@@ -19,7 +19,7 @@ Humans = new Dictionary<int, Human>();
 Player = player;
 Score = 0;
 GameEnded = false;
-EndReason = GameEndReason.ZombiesWin;
+PlayerWon = false;
 }
 public Game Clone()
 {
@@ -30,42 +30,24 @@ newGame.Zombies.Add(zombie.Key, zombie.Value.Clone());
 }
 foreach (var human in Humans)
 {
-newGame.Humans.Add(human.Key, human.Value.Clone());
+newGame.Humans.Add(human.Key, human.Value);
 }
 newGame.Score = Score;
 newGame.GameEnded = GameEnded;
-newGame.EndReason = EndReason;
+newGame.PlayerWon = PlayerWon;
 return newGame;
 }
-public enum GameEndReason
-{
-ZombiesWin,
-PlayerWin
 }
-}
-public class Human : ILocatable, IIdentifiable, IClonable<Human>
+public struct Human : ILocatable, IIdentifiable
 {
 public int Id { get; set; }
 public int X { get; set; }
 public int Y { get; set; }
-public bool Alive { get; set; }
 public Human(int id, int x, int y)
 {
 Id = id;
 X = x;
 Y = y;
-Alive = true;
-}
-private Human(int id, int x, int y, bool alive)
-{
-Id = id;
-X = x;
-Y = y;
-Alive = alive;
-}
-public Human Clone()
-{
-return new Human(Id, X, Y, Alive);
 }
 }
 public interface IClonable<T>
@@ -130,34 +112,14 @@ int y = int.Parse(inputs[1]);
 player.X = x;
 player.Y = y;
 int humanCount = int.Parse(Console.ReadLine());
-foreach (var human in game.Humans)
-{
-human.Value.Alive = false;
-}
 for (int i = 0; i < humanCount; i++)
 {
 inputs = Console.ReadLine().Split(' ');
 int humanId = int.Parse(inputs[0]);
 int humanX = int.Parse(inputs[1]);
 int humanY = int.Parse(inputs[2]);
-if (game.Humans.TryGetValue(humanId, out var human))
-{
-human.X = humanX;
-human.Y = humanY;
-human.Alive = true;
-}
-else
-{
 var newHuman = new Human(humanId, humanX, humanY);
 game.Humans.Add(humanId, newHuman);
-}
-}
-foreach (var human in game.Humans)
-{
-if (!human.Value.Alive)
-{
-game.Humans.Remove(human.Key);
-}
 }
 int zombieCount = int.Parse(Console.ReadLine());
 for (int i = 0; i < zombieCount; i++)
@@ -168,16 +130,8 @@ int zombieX = int.Parse(inputs[1]);
 int zombieY = int.Parse(inputs[2]);
 int zombieXNext = int.Parse(inputs[3]);
 int zombieYNext = int.Parse(inputs[4]);
-if (game.Zombies.TryGetValue(zombieId, out var zombie))
-{
-zombie.X = zombieX;
-zombie.Y = zombieY;
-}
-else
-{
 var newZombie = new Zombie(zombieId, zombieX, zombieY, zombieXNext, zombieYNext);
 game.Zombies.Add(zombieId, newZombie);
-}
 }
 initialized = true;
 }
@@ -212,21 +166,21 @@ var moves = new List<Location>();
 for (int round = 0; round < maxSimulatedRounds; round++)
 {
 var newLocation = EntityUtils.GetValidRandomLocation(evolutionGame.Player);
-evolutionGame = Simulator.Simulate(evolutionGame, newLocation);
+Simulator.Simulate(ref evolutionGame, newLocation);
 moves.Add(newLocation);
 if (evolutionGame.GameEnded)
 {
 break;
 }
 }
-if (evolutionGame.EndReason == Game.GameEndReason.PlayerWin &&
+if (evolutionGame.PlayerWon &&
 evolutionGame.Score > bestSimulationScore)
 {
 bestSimulationScore = evolutionGame.Score;
 bestSimulation = new Simulation(evolutionGame, moves);
 }
 }
-if (previousBestSimulation is { Game.EndReason: Game.GameEndReason.PlayerWin } &&
+if (previousBestSimulation.HasValue && previousBestSimulation.Value.Game.PlayerWon &&
 previousBestSimulation.Value.Game.Score > bestSimulationScore)
 {
 previousBestSimulation.Value.Moves.RemoveAt(0);
@@ -238,17 +192,16 @@ previousBestSimulation = bestSimulation;
 }
 Console.Error.WriteLine(
 "Best simulation has a ending score of {0} after {1} moves. There will be {2} humans left",
-bestSimulationScore, bestSimulation.Moves.Count, bestSimulation.Game.Humans.Count);
+bestSimulation.Game.Score, bestSimulation.Moves.Count, bestSimulation.Game.Humans.Count);
 var target = bestSimulation.Moves[0];
-var simulation = Simulator.Simulate(game, target);
-Console.Error.WriteLine(
-$"Next round we should have {simulation.Score} score. {simulation.Humans.Count} humans alive");
-if (simulation.GameEnded)
+Simulator.Simulate(ref game, target);
+/*Console.Error.WriteLine(
+$"Next round we should have {simulation.Score} score. {simulation.Humans.Count} humans alive");*/
+/*if (simulation.GameEnded)
 {
 Console.Error.WriteLine("Game ended in the next round");
-}
-game = simulation;
-Console.Error.WriteLine("Player is at {0}, {1}", player.X, player.Y);
+}*/
+/*Console.Error.WriteLine("Player is at {0}, {1}", player.X, player.Y);
 foreach (var human in game.Humans)
 {
 Console.Error.WriteLine(
@@ -258,7 +211,7 @@ foreach (var zombie in game.Zombies)
 {
 Console.Error.WriteLine(
 $"Zombie {zombie.Key} is at {zombie.Value.X}, {zombie.Value.Y}");
-}
+}*/
 Console.WriteLine(target.ToString()); // Your destination coordinates
 }
 }
@@ -275,15 +228,14 @@ Moves = moves;
 }
 public class Simulator
 {
-public static Game Simulate(Game startingPosition, ILocatable playerTarget)
+public static void Simulate(ref Game game, ILocatable playerTarget)
 {
-var newGame = startingPosition.Clone();
 // 1. First we move the zombies towards the closest human or player
-foreach (var zombie in newGame.Zombies.Values)
+foreach (var zombie in game.Zombies.Values)
 {
 double closestDist = double.MaxValue;
 ILocatable closestEntity = default;
-foreach (var human in newGame.Humans.Values)
+foreach (var human in game.Humans.Values)
 {
 var dist = DistanceUtils.FastDistanceTo(zombie, human);
 if (dist < closestDist)
@@ -292,12 +244,12 @@ closestDist = dist;
 closestEntity = human;
 }
 }
-var playerDist = DistanceUtils.FastDistanceTo(newGame.Player, zombie);
+var playerDist = DistanceUtils.FastDistanceTo(game.Player, zombie);
 if (playerDist < closestDist)
 {
-closestEntity = newGame.Player;
+closestEntity = game.Player;
 }
-if (Math.Sqrt(closestDist) < 400)
+if (closestDist < 160000)
 {
 zombie.X = closestEntity!.X;
 zombie.Y = closestEntity!.Y;
@@ -308,48 +260,47 @@ EntityUtils.MoveTowards(zombie, closestEntity!, 400);
 }
 }
 // 2. Move the player
-if (DistanceUtils.DistanceTo(newGame.Player, playerTarget) < 1000)
+if (DistanceUtils.FastDistanceTo(game.Player, playerTarget) < 1000000)
 {
-newGame.Player.X = playerTarget.X;
-newGame.Player.Y = playerTarget.Y;
+game.Player.X = playerTarget.X;
+game.Player.Y = playerTarget.Y;
 }
 else
 {
-EntityUtils.MoveTowards(newGame.Player, playerTarget, 1000);
+EntityUtils.MoveTowards(game.Player, playerTarget, 1000);
 }
 // 3. Kill the zombies that are close to the player
 var zombiesKilled = 0;
-foreach (var zombie in newGame.Zombies.Values)
+foreach (var zombie in game.Zombies.Values)
 {
-var dist = DistanceUtils.DistanceTo(newGame.Player, zombie);
-if (dist > 2000) continue;
-newGame.Score += newGame.Humans.Count * newGame.Humans.Count * 10 *
+var dist = DistanceUtils.FastDistanceTo(game.Player, zombie);
+if (dist > 4000000) continue;
+game.Score += game.Humans.Count * game.Humans.Count * 10 *
 NumberUtils.Fibonacci(zombiesKilled + 2);
-newGame.Zombies.Remove(zombie.Id);
+game.Zombies.Remove(zombie.Id);
 zombiesKilled++;
 }
 // 4. Kill all the humans that are close to the zombies
-foreach (var zombie in newGame.Zombies.Values)
+foreach (var zombie in game.Zombies.Values)
 {
-foreach (var human in newGame.Humans.Values)
+foreach (var human in game.Humans.Values)
 {
 if (zombie.X == human.X && zombie.Y == human.Y)
 {
-newGame.Humans.Remove(human.Id);
+game.Humans.Remove(human.Id);
 }
 }
 }
-if (newGame.Zombies.Count == 0)
+if (game.Humans.Count == 0)
 {
-newGame.GameEnded = true;
-newGame.EndReason = Game.GameEndReason.PlayerWin;
+game.GameEnded = true;
+game.PlayerWon = false;
 }
-if (newGame.Humans.Count == 0)
+if (game.Zombies.Count == 0)
 {
-newGame.GameEnded = true;
-newGame.EndReason = Game.GameEndReason.ZombiesWin;
+game.GameEnded = true;
+game.PlayerWon = true;
 }
-return newGame;
 }
 }
 public class Zombie : ILocatable, IIdentifiable, IClonable<Zombie>
@@ -383,6 +334,7 @@ new Location(0, -1000)
 };*/
 public static Location[] Get = new[]
 {
+new Location(0, 0), // Stay
 new Location(1000, 0), // Right
 new Location((int)Math.Round(1000 * Math.Cos(Math.PI / 4)),
 (int)Math.Round(1000 * Math.Sin(Math.PI / 4))), // Upper right

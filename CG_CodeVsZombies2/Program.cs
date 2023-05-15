@@ -30,36 +30,14 @@ namespace CG_CodeVsZombies2
 
                     int humanCount = int.Parse(Console.ReadLine());
 
-                    foreach (var human in game.Humans)
-                    {
-                        human.Value.Alive = false;
-                    }
-
                     for (int i = 0; i < humanCount; i++)
                     {
                         inputs = Console.ReadLine().Split(' ');
                         int humanId = int.Parse(inputs[0]);
                         int humanX = int.Parse(inputs[1]);
                         int humanY = int.Parse(inputs[2]);
-                        if (game.Humans.TryGetValue(humanId, out var human))
-                        {
-                            human.X = humanX;
-                            human.Y = humanY;
-                            human.Alive = true;
-                        }
-                        else
-                        {
-                            var newHuman = new Human(humanId, humanX, humanY);
-                            game.Humans.Add(humanId, newHuman);
-                        }
-                    }
-
-                    foreach (var human in game.Humans)
-                    {
-                        if (!human.Value.Alive)
-                        {
-                            game.Humans.Remove(human.Key);
-                        }
+                        var newHuman = new Human(humanId, humanX, humanY);
+                        game.Humans.Add(humanId, newHuman);
                     }
 
                     int zombieCount = int.Parse(Console.ReadLine());
@@ -71,16 +49,8 @@ namespace CG_CodeVsZombies2
                         int zombieY = int.Parse(inputs[2]);
                         int zombieXNext = int.Parse(inputs[3]);
                         int zombieYNext = int.Parse(inputs[4]);
-                        if (game.Zombies.TryGetValue(zombieId, out var zombie))
-                        {
-                            zombie.X = zombieX;
-                            zombie.Y = zombieY;
-                        }
-                        else
-                        {
-                            var newZombie = new Zombie(zombieId, zombieX, zombieY, zombieXNext, zombieYNext);
-                            game.Zombies.Add(zombieId, newZombie);
-                        }
+                        var newZombie = new Zombie(zombieId, zombieX, zombieY, zombieXNext, zombieYNext);
+                        game.Zombies.Add(zombieId, newZombie);
                     }
 
                     initialized = true;
@@ -123,7 +93,7 @@ namespace CG_CodeVsZombies2
                     for (int round = 0; round < maxSimulatedRounds; round++)
                     {
                         var newLocation = EntityUtils.GetValidRandomLocation(evolutionGame.Player);
-                        evolutionGame = Simulator.Simulate(evolutionGame, newLocation);
+                        Simulator.Simulate(ref evolutionGame, newLocation);
                         moves.Add(newLocation);
                         if (evolutionGame.GameEnded)
                         {
@@ -131,7 +101,7 @@ namespace CG_CodeVsZombies2
                         }
                     }
 
-                    if (evolutionGame.EndReason == Game.GameEndReason.PlayerWin &&
+                    if (evolutionGame.PlayerWon &&
                         evolutionGame.Score > bestSimulationScore)
                     {
                         bestSimulationScore = evolutionGame.Score;
@@ -139,7 +109,7 @@ namespace CG_CodeVsZombies2
                     }
                 }
 
-                if (previousBestSimulation is { Game.EndReason: Game.GameEndReason.PlayerWin } &&
+                if (previousBestSimulation.HasValue && previousBestSimulation.Value.Game.PlayerWon &&
                     previousBestSimulation.Value.Game.Score > bestSimulationScore)
                 {
                     previousBestSimulation.Value.Moves.RemoveAt(0);
@@ -152,23 +122,21 @@ namespace CG_CodeVsZombies2
 
                 Console.Error.WriteLine(
                     "Best simulation has a ending score of {0} after {1} moves. There will be {2} humans left",
-                    bestSimulationScore, bestSimulation.Moves.Count, bestSimulation.Game.Humans.Count);
+                    bestSimulation.Game.Score, bestSimulation.Moves.Count, bestSimulation.Game.Humans.Count);
 
                 var target = bestSimulation.Moves[0];
 
-                var simulation = Simulator.Simulate(game, target);
-                Console.Error.WriteLine(
-                    $"Next round we should have {simulation.Score} score. {simulation.Humans.Count} humans alive");
+                Simulator.Simulate(ref game, target);
+                /*Console.Error.WriteLine(
+                    $"Next round we should have {simulation.Score} score. {simulation.Humans.Count} humans alive");*/
 
-                if (simulation.GameEnded)
+                /*if (simulation.GameEnded)
                 {
                     Console.Error.WriteLine("Game ended in the next round");
-                }
-
-                game = simulation;
+                }*/
 
 
-                Console.Error.WriteLine("Player is at {0}, {1}", player.X, player.Y);
+                /*Console.Error.WriteLine("Player is at {0}, {1}", player.X, player.Y);
 
                 foreach (var human in game.Humans)
                 {
@@ -180,7 +148,7 @@ namespace CG_CodeVsZombies2
                 {
                     Console.Error.WriteLine(
                         $"Zombie {zombie.Key} is at {zombie.Value.X}, {zombie.Value.Y}");
-                }
+                }*/
 
                 Console.WriteLine(target.ToString()); // Your destination coordinates
             }

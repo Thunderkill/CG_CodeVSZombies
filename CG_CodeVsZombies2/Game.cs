@@ -11,7 +11,7 @@ namespace CG_CodeVsZombies2
 
         public bool GameEnded { get; set; }
 
-        public GameEndReason EndReason { get; set; }
+        public bool PlayerWon { get; set; }
 
         public Player Player { get; set; }
 
@@ -22,7 +22,7 @@ namespace CG_CodeVsZombies2
             Player = player;
             Score = 0;
             GameEnded = false;
-            EndReason = GameEndReason.ZombiesWin;
+            PlayerWon = false;
         }
 
         public Game Clone()
@@ -36,22 +36,16 @@ namespace CG_CodeVsZombies2
 
             foreach (var human in Humans)
             {
-                newGame.Humans.Add(human.Key, human.Value.Clone());
+                newGame.Humans.Add(human.Key, human.Value);
             }
 
             newGame.Score = Score;
 
             newGame.GameEnded = GameEnded;
 
-            newGame.EndReason = EndReason;
+            newGame.PlayerWon = PlayerWon;
 
             return newGame;
-        }
-
-        public enum GameEndReason
-        {
-            ZombiesWin,
-            PlayerWin
         }
     }
 }
