@@ -78,9 +78,16 @@ namespace CG_CodeVsZombies2
                 }
             }
 
-            if (newGame.Zombies.Count == 0 || newGame.Humans.Count == 0)
+            if (newGame.Zombies.Count == 0)
             {
                 newGame.GameEnded = true;
+                newGame.EndReason = Game.GameEndReason.PlayerWin;
+            }
+
+            if (newGame.Humans.Count == 0)
+            {
+                newGame.GameEnded = true;
+                newGame.EndReason = Game.GameEndReason.ZombiesWin;
             }
 
             return newGame;

@@ -10,6 +10,9 @@ namespace CG_CodeVsZombies2
         public int Score { get; set; }
 
         public bool GameEnded { get; set; }
+
+        public GameEndReason EndReason { get; set; }
+
         public Player Player { get; set; }
 
         public Game(Player player)
@@ -19,6 +22,7 @@ namespace CG_CodeVsZombies2
             Player = player;
             Score = 0;
             GameEnded = false;
+            EndReason = GameEndReason.ZombiesWin;
         }
 
         public Game Clone()
@@ -39,7 +43,15 @@ namespace CG_CodeVsZombies2
 
             newGame.GameEnded = GameEnded;
 
+            newGame.EndReason = EndReason;
+
             return newGame;
+        }
+
+        public enum GameEndReason
+        {
+            ZombiesWin,
+            PlayerWin
         }
     }
 }

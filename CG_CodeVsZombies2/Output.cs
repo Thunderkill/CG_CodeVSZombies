@@ -10,6 +10,7 @@ public Dictionary<int, Zombie> Zombies { get; set; }
 public Dictionary<int, Human> Humans { get; set; }
 public int Score { get; set; }
 public bool GameEnded { get; set; }
+public GameEndReason EndReason { get; set; }
 public Player Player { get; set; }
 public Game(Player player)
 {
@@ -18,6 +19,7 @@ Humans = new Dictionary<int, Human>();
 Player = player;
 Score = 0;
 GameEnded = false;
+EndReason = GameEndReason.ZombiesWin;
 }
 public Game Clone()
 {
@@ -32,7 +34,13 @@ newGame.Humans.Add(human.Key, human.Value.Clone());
 }
 newGame.Score = Score;
 newGame.GameEnded = GameEnded;
+newGame.EndReason = EndReason;
 return newGame;
+}
+public enum GameEndReason
+{
+ZombiesWin,
+PlayerWin
 }
 }
 public class Human : ILocatable, IIdentifiable, IClonable<Human>
@@ -109,7 +117,8 @@ string[] inputs;
 Player player = new Player(0, 0);
 Game game = new Game(player);
 bool initialized = false;
-int maxSimulatedRounds = 20;
+int maxSimulatedRounds = 100;
+Simulation? previousBestSimulation = null;
 // game loop
 while (true)
 {
@@ -189,10 +198,11 @@ Console.ReadLine();
 }
 var watch = Stopwatch.StartNew();
 // DO ACTIONS HERE
-var simulations = new List<Simulation>();
-for (int evolution = 0; evolution < 10000; evolution++)
+var bestSimulationScore = int.MinValue;
+Simulation bestSimulation = default;
+for (int evolution = 0; evolution < 100000; evolution++)
 {
-if (watch.ElapsedMilliseconds > 90)
+if (watch.ElapsedMilliseconds > 98)
 {
 Console.Error.WriteLine("Managed to do {0} evolutions", evolution);
 break;
@@ -201,24 +211,34 @@ var evolutionGame = game.Clone();
 var moves = new List<Location>();
 for (int round = 0; round < maxSimulatedRounds; round++)
 {
-var newLocation = EntityUtils.GetValidRandomLocation(evolutionGame.Player, 1000);
+var newLocation = EntityUtils.GetValidRandomLocation(evolutionGame.Player);
 evolutionGame = Simulator.Simulate(evolutionGame, newLocation);
 moves.Add(newLocation);
-}
-simulations.Add(new Simulation(evolutionGame, moves));
-}
-var bestSimulationScore = int.MinValue;
-Simulation bestSimulation = default;
-foreach (var sim in simulations)
+if (evolutionGame.GameEnded)
 {
-if (sim.Game.Score > bestSimulationScore)
+break;
+}
+}
+if (evolutionGame.EndReason == Game.GameEndReason.PlayerWin &&
+evolutionGame.Score > bestSimulationScore)
 {
-bestSimulationScore = sim.Game.Score;
-bestSimulation = sim;
+bestSimulationScore = evolutionGame.Score;
+bestSimulation = new Simulation(evolutionGame, moves);
 }
 }
-Console.Error.WriteLine("Best simulation has a ending score of {0} after {1} moves",
-bestSimulationScore, maxSimulatedRounds);
+if (previousBestSimulation is { Game.EndReason: Game.GameEndReason.PlayerWin } &&
+previousBestSimulation.Value.Game.Score > bestSimulationScore)
+{
+previousBestSimulation.Value.Moves.RemoveAt(0);
+bestSimulation = previousBestSimulation.Value;
+}
+else
+{
+previousBestSimulation = bestSimulation;
+}
+Console.Error.WriteLine(
+"Best simulation has a ending score of {0} after {1} moves. There will be {2} humans left",
+bestSimulationScore, bestSimulation.Moves.Count, bestSimulation.Game.Humans.Count);
 var target = bestSimulation.Moves[0];
 var simulation = Simulator.Simulate(game, target);
 Console.Error.WriteLine(
@@ -319,9 +339,15 @@ newGame.Humans.Remove(human.Id);
 }
 }
 }
-if (newGame.Zombies.Count == 0 || newGame.Humans.Count == 0)
+if (newGame.Zombies.Count == 0)
 {
 newGame.GameEnded = true;
+newGame.EndReason = Game.GameEndReason.PlayerWin;
+}
+if (newGame.Humans.Count == 0)
+{
+newGame.GameEnded = true;
+newGame.EndReason = Game.GameEndReason.ZombiesWin;
 }
 return newGame;
 }
@@ -344,6 +370,35 @@ NextY = nextY;
 public Zombie Clone()
 {
 return new Zombie(Id, X, Y, NextX, NextY);
+}
+}
+public class AllowedDirections
+{
+/*public static Location[] Get = new[]
+{
+new Location(1000, 0),
+new Location(-1000, 0),
+new Location(0, 1000),
+new Location(0, -1000)
+};*/
+public static Location[] Get = new[]
+{
+new Location(1000, 0), // Right
+new Location((int)Math.Round(1000 * Math.Cos(Math.PI / 4)),
+(int)Math.Round(1000 * Math.Sin(Math.PI / 4))), // Upper right
+new Location(0, 1000), // Up
+new Location((int)Math.Round(-1000 * Math.Cos(Math.PI / 4)),
+(int)Math.Round(1000 * Math.Sin(Math.PI / 4))), // Upper left
+new Location(-1000, 0), // Left
+new Location((int)Math.Round(-1000 * Math.Cos(Math.PI / 4)),
+(int)Math.Round(-1000 * Math.Sin(Math.PI / 4))), // Lower left
+new Location(0, -1000), // Down
+new Location((int)Math.Round(1000 * Math.Cos(Math.PI / 4)),
+(int)Math.Round(-1000 * Math.Sin(Math.PI / 4))) // Lower right
+};
+public static Location GetRandom()
+{
+return Get[Random.Shared.Next(0, Get.Length)];
 }
 }
 public static class DistanceUtils
@@ -378,11 +433,23 @@ double newY = from.Y + unitDeltaY * units;
 from.X = (int)newX;
 from.Y = (int)newY;
 }
-public static Location GetValidRandomLocation(ILocatable start, int maxRange)
+/*public static Location GetValidRandomLocation(ILocatable start, int maxRange)
 {
 var x = Random.Shared.Next(Math.Max(start.X - maxRange, 0), Math.Min(start.X + maxRange, 16000));
 var y = Random.Shared.Next(Math.Max(start.Y - maxRange, 0), Math.Min(start.Y + maxRange, 9000));
 return new Location(x, y);
+}*/
+public static Location GetValidRandomLocation(ILocatable start)
+{
+for (int i = 0; i < 10; i++)
+{
+var dir = AllowedDirections.GetRandom();
+var x = start.X + dir.X;
+var y = start.Y + dir.Y;
+if (x < 0 || x > 16000 || y < 0 || y > 9000) continue;
+return new Location(x, y);
+}
+return new Location(start.X, start.Y);
 }
 }
 public static class NumberUtils

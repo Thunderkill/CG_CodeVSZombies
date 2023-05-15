@@ -26,11 +26,25 @@ namespace CG_CodeVsZombies2.Utils
             from.Y = (int)newY;
         }
 
-        public static Location GetValidRandomLocation(ILocatable start, int maxRange)
+        /*public static Location GetValidRandomLocation(ILocatable start, int maxRange)
         {
             var x = Random.Shared.Next(Math.Max(start.X - maxRange, 0), Math.Min(start.X + maxRange, 16000));
             var y = Random.Shared.Next(Math.Max(start.Y - maxRange, 0), Math.Min(start.Y + maxRange, 9000));
             return new Location(x, y);
+        }*/
+
+        public static Location GetValidRandomLocation(ILocatable start)
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                var dir = AllowedDirections.GetRandom();
+                var x = start.X + dir.X;
+                var y = start.Y + dir.Y;
+                if (x < 0 || x > 16000 || y < 0 || y > 9000) continue;
+                return new Location(x, y);
+            }
+
+            return new Location(start.X, start.Y);
         }
     }
 }

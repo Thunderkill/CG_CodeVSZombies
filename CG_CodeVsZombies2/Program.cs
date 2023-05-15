@@ -14,7 +14,8 @@ namespace CG_CodeVsZombies2
             Player player = new Player(0, 0);
             Game game = new Game(player);
             bool initialized = false;
-            int maxSimulatedRounds = 20;
+            int maxSimulatedRounds = 100;
+            Simulation? previousBestSimulation = null;
 
             // game loop
             while (true)
@@ -105,11 +106,12 @@ namespace CG_CodeVsZombies2
 
 
                 // DO ACTIONS HERE
+                var bestSimulationScore = int.MinValue;
+                Simulation bestSimulation = default;
 
-                var simulations = new List<Simulation>();
-                for (int evolution = 0; evolution < 10000; evolution++)
+                for (int evolution = 0; evolution < 100000; evolution++)
                 {
-                    if (watch.ElapsedMilliseconds > 90)
+                    if (watch.ElapsedMilliseconds > 98)
                     {
                         Console.Error.WriteLine("Managed to do {0} evolutions", evolution);
                         break;
@@ -117,30 +119,40 @@ namespace CG_CodeVsZombies2
 
                     var evolutionGame = game.Clone();
                     var moves = new List<Location>();
+
                     for (int round = 0; round < maxSimulatedRounds; round++)
                     {
-                        var newLocation = EntityUtils.GetValidRandomLocation(evolutionGame.Player, 1000);
+                        var newLocation = EntityUtils.GetValidRandomLocation(evolutionGame.Player);
                         evolutionGame = Simulator.Simulate(evolutionGame, newLocation);
                         moves.Add(newLocation);
+                        if (evolutionGame.GameEnded)
+                        {
+                            break;
+                        }
                     }
 
-                    simulations.Add(new Simulation(evolutionGame, moves));
-                }
-
-                var bestSimulationScore = int.MinValue;
-                Simulation bestSimulation = default;
-
-                foreach (var sim in simulations)
-                {
-                    if (sim.Game.Score > bestSimulationScore)
+                    if (evolutionGame.EndReason == Game.GameEndReason.PlayerWin &&
+                        evolutionGame.Score > bestSimulationScore)
                     {
-                        bestSimulationScore = sim.Game.Score;
-                        bestSimulation = sim;
+                        bestSimulationScore = evolutionGame.Score;
+                        bestSimulation = new Simulation(evolutionGame, moves);
                     }
                 }
 
-                Console.Error.WriteLine("Best simulation has a ending score of {0} after {1} moves",
-                    bestSimulationScore, maxSimulatedRounds);
+                if (previousBestSimulation is { Game.EndReason: Game.GameEndReason.PlayerWin } &&
+                    previousBestSimulation.Value.Game.Score > bestSimulationScore)
+                {
+                    previousBestSimulation.Value.Moves.RemoveAt(0);
+                    bestSimulation = previousBestSimulation.Value;
+                }
+                else
+                {
+                    previousBestSimulation = bestSimulation;
+                }
+
+                Console.Error.WriteLine(
+                    "Best simulation has a ending score of {0} after {1} moves. There will be {2} humans left",
+                    bestSimulationScore, bestSimulation.Moves.Count, bestSimulation.Game.Humans.Count);
 
                 var target = bestSimulation.Moves[0];
 
