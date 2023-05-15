@@ -8,11 +8,11 @@
     </PropertyGroup>
 
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-        <Exec Command="CGPacker.exe"/>
+        <Exec Command="CGPacker.exe" />
     </Target>
 
     <ItemGroup>
-        <Compile Remove="Output.cs"/>
+        <Compile Remove="Output.cs" />
     </ItemGroup>
 
 </Project>

@@ -10,6 +10,9 @@ namespace CG_CodeVsZombies2
 
             Player player = new Player(0, 0);
             Game game = new Game(player);
+            Game simulatedGame = new Game(player);
+
+            bool simulationInitialized = false;
 
             // game loop
             while (true)
@@ -78,6 +81,22 @@ namespace CG_CodeVsZombies2
                 // Write an action using Console.WriteLine()
                 // To debug: Console.Error.WriteLine("Debug messages...");
 
+                if (!simulationInitialized)
+                {
+                    simulatedGame = game.Clone();
+                    simulationInitialized = true;
+                }
+
+                var target = new Location(0, 0);
+
+                var simulation = Simulator.Simulate(simulatedGame, target);
+                Console.Error.WriteLine(
+                    $"Next round we should have {simulation.Score} score. {simulation.Humans.Count} humans alive");
+                Console.Error.WriteLine(
+                    $"Player should be at {simulation.Player.X}, {simulation.Player.Y}");
+
+                simulatedGame = simulation;
+
 
                 Console.Error.WriteLine("Player is at {0}, {1}", player.X, player.Y);
 
@@ -93,7 +112,7 @@ namespace CG_CodeVsZombies2
                         $"Zombie {zombie.Key} is at {zombie.Value.X}, {zombie.Value.Y}");
                 }
 
-                Console.WriteLine("0 0"); // Your destination coordinates
+                Console.WriteLine(target.ToString()); // Your destination coordinates
             }
         }
     }

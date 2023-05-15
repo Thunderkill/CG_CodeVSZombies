@@ -1,6 +1,6 @@
 ﻿namespace CG_CodeVsZombies2
 {
-    public class Zombie : ILocatable, IIdentifiable
+    public class Zombie : ILocatable, IIdentifiable, IClonable<Zombie>
     {
         public int Id { get; set; }
         public int X { get; set; }
@@ -16,6 +16,10 @@
             NextX = nextX;
             NextY = nextY;
         }
+
+        public Zombie Clone()
+        {
+            return new Zombie(Id, X, Y, NextX, NextY);
+        }
     }
 }
-
