@@ -8,6 +8,8 @@ namespace CG_CodeVsZombies2
         public Dictionary<int, Human> Humans { get; set; }
 
         public int Score { get; set; }
+
+        public bool GameEnded { get; set; }
         public Player Player { get; set; }
 
         public Game(Player player)
@@ -16,6 +18,7 @@ namespace CG_CodeVsZombies2
             Humans = new Dictionary<int, Human>();
             Player = player;
             Score = 0;
+            GameEnded = false;
         }
 
         public Game Clone()
@@ -33,6 +36,8 @@ namespace CG_CodeVsZombies2
             }
 
             newGame.Score = Score;
+
+            newGame.GameEnded = GameEnded;
 
             return newGame;
         }

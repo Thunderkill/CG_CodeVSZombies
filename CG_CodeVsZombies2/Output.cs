@@ -1,6 +1,7 @@
 // Author: Thunderr
 using System.Collections.Generic;
 using System;
+using System.Diagnostics;
 namespace CG_CodeVsZombies2
 {
 public struct Game : IClonable<Game>
@@ -8,6 +9,7 @@ public struct Game : IClonable<Game>
 public Dictionary<int, Zombie> Zombies { get; set; }
 public Dictionary<int, Human> Humans { get; set; }
 public int Score { get; set; }
+public bool GameEnded { get; set; }
 public Player Player { get; set; }
 public Game(Player player)
 {
@@ -15,6 +17,7 @@ Zombies = new Dictionary<int, Zombie>();
 Humans = new Dictionary<int, Human>();
 Player = player;
 Score = 0;
+GameEnded = false;
 }
 public Game Clone()
 {
@@ -28,6 +31,7 @@ foreach (var human in Humans)
 newGame.Humans.Add(human.Key, human.Value.Clone());
 }
 newGame.Score = Score;
+newGame.GameEnded = GameEnded;
 return newGame;
 }
 }
@@ -104,10 +108,12 @@ public static void Main()
 string[] inputs;
 Player player = new Player(0, 0);
 Game game = new Game(player);
-Game simulatedGame = new Game(player);
-bool simulationInitialized = false;
+bool initialized = false;
+int maxSimulatedRounds = 20;
 // game loop
 while (true)
+{
+if (!initialized)
 {
 inputs = Console.ReadLine().Split(' ');
 int x = int.Parse(inputs[0]);
@@ -164,20 +170,64 @@ var newZombie = new Zombie(zombieId, zombieX, zombieY, zombieXNext, zombieYNext)
 game.Zombies.Add(zombieId, newZombie);
 }
 }
-// Write an action using Console.WriteLine()
-// To debug: Console.Error.WriteLine("Debug messages...");
-if (!simulationInitialized)
-{
-simulatedGame = game.Clone();
-simulationInitialized = true;
+initialized = true;
 }
-var target = new Location(0, 0);
-var simulation = Simulator.Simulate(simulatedGame, target);
+else
+{
+// This is a dummy reader that is only used after reading initial positions, cause we can fully simulate the rest
+Console.ReadLine();
+int humanCount = int.Parse(Console.ReadLine());
+for (int i = 0; i < humanCount; i++)
+{
+Console.ReadLine();
+}
+int zombieCount = int.Parse(Console.ReadLine());
+for (int i = 0; i < zombieCount; i++)
+{
+Console.ReadLine();
+}
+}
+var watch = Stopwatch.StartNew();
+// DO ACTIONS HERE
+var simulations = new List<Simulation>();
+for (int evolution = 0; evolution < 10000; evolution++)
+{
+if (watch.ElapsedMilliseconds > 90)
+{
+Console.Error.WriteLine("Managed to do {0} evolutions", evolution);
+break;
+}
+var evolutionGame = game.Clone();
+var moves = new List<Location>();
+for (int round = 0; round < maxSimulatedRounds; round++)
+{
+var newLocation = EntityUtils.GetValidRandomLocation(evolutionGame.Player, 1000);
+evolutionGame = Simulator.Simulate(evolutionGame, newLocation);
+moves.Add(newLocation);
+}
+simulations.Add(new Simulation(evolutionGame, moves));
+}
+var bestSimulationScore = int.MinValue;
+Simulation bestSimulation = default;
+foreach (var sim in simulations)
+{
+if (sim.Game.Score > bestSimulationScore)
+{
+bestSimulationScore = sim.Game.Score;
+bestSimulation = sim;
+}
+}
+Console.Error.WriteLine("Best simulation has a ending score of {0} after {1} moves",
+bestSimulationScore, maxSimulatedRounds);
+var target = bestSimulation.Moves[0];
+var simulation = Simulator.Simulate(game, target);
 Console.Error.WriteLine(
 $"Next round we should have {simulation.Score} score. {simulation.Humans.Count} humans alive");
-Console.Error.WriteLine(
-$"Player should be at {simulation.Player.X}, {simulation.Player.Y}");
-simulatedGame = simulation;
+if (simulation.GameEnded)
+{
+Console.Error.WriteLine("Game ended in the next round");
+}
+game = simulation;
 Console.Error.WriteLine("Player is at {0}, {1}", player.X, player.Y);
 foreach (var human in game.Humans)
 {
@@ -191,6 +241,16 @@ $"Zombie {zombie.Key} is at {zombie.Value.X}, {zombie.Value.Y}");
 }
 Console.WriteLine(target.ToString()); // Your destination coordinates
 }
+}
+}
+public struct Simulation
+{
+public Game Game { get; set; }
+public List<Location> Moves { get; set; }
+public Simulation(Game game, List<Location> moves)
+{
+Game = game;
+Moves = moves;
 }
 }
 public class Simulator
@@ -259,6 +319,10 @@ newGame.Humans.Remove(human.Id);
 }
 }
 }
+if (newGame.Zombies.Count == 0 || newGame.Humans.Count == 0)
+{
+newGame.GameEnded = true;
+}
 return newGame;
 }
 }
@@ -313,6 +377,12 @@ double newY = from.Y + unitDeltaY * units;
 // Set the new coordinates for 'from' (replace the below lines with your actual code)
 from.X = (int)newX;
 from.Y = (int)newY;
+}
+public static Location GetValidRandomLocation(ILocatable start, int maxRange)
+{
+var x = Random.Shared.Next(Math.Max(start.X - maxRange, 0), Math.Min(start.X + maxRange, 16000));
+var y = Random.Shared.Next(Math.Max(start.Y - maxRange, 0), Math.Min(start.Y + maxRange, 9000));
+return new Location(x, y);
 }
 }
 public static class NumberUtils

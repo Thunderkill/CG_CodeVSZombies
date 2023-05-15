@@ -25,5 +25,12 @@ namespace CG_CodeVsZombies2.Utils
             from.X = (int)newX;
             from.Y = (int)newY;
         }
+
+        public static Location GetValidRandomLocation(ILocatable start, int maxRange)
+        {
+            var x = Random.Shared.Next(Math.Max(start.X - maxRange, 0), Math.Min(start.X + maxRange, 16000));
+            var y = Random.Shared.Next(Math.Max(start.Y - maxRange, 0), Math.Min(start.Y + maxRange, 9000));
+            return new Location(x, y);
+        }
     }
 }
