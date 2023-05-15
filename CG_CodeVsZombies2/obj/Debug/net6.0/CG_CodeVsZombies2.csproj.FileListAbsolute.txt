@@ -1,0 +1,15 @@
+C:\Users\Thund\repos\CG_CodeVsZombies2\CG_CodeVsZombies2\bin\Debug\net6.0\CG_CodeVsZombies2.exe
+C:\Users\Thund\repos\CG_CodeVsZombies2\CG_CodeVsZombies2\bin\Debug\net6.0\CG_CodeVsZombies2.deps.json
+C:\Users\Thund\repos\CG_CodeVsZombies2\CG_CodeVsZombies2\bin\Debug\net6.0\CG_CodeVsZombies2.runtimeconfig.json
+C:\Users\Thund\repos\CG_CodeVsZombies2\CG_CodeVsZombies2\bin\Debug\net6.0\CG_CodeVsZombies2.dll
+C:\Users\Thund\repos\CG_CodeVsZombies2\CG_CodeVsZombies2\bin\Debug\net6.0\CG_CodeVsZombies2.pdb
+C:\Users\Thund\repos\CG_CodeVsZombies2\CG_CodeVsZombies2\obj\Debug\net6.0\CG_CodeVsZombies2.csproj.AssemblyReference.cache
+C:\Users\Thund\repos\CG_CodeVsZombies2\CG_CodeVsZombies2\obj\Debug\net6.0\CG_CodeVsZombies2.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Thund\repos\CG_CodeVsZombies2\CG_CodeVsZombies2\obj\Debug\net6.0\CG_CodeVsZombies2.AssemblyInfoInputs.cache
+C:\Users\Thund\repos\CG_CodeVsZombies2\CG_CodeVsZombies2\obj\Debug\net6.0\CG_CodeVsZombies2.AssemblyInfo.cs
+C:\Users\Thund\repos\CG_CodeVsZombies2\CG_CodeVsZombies2\obj\Debug\net6.0\CG_CodeVsZombies2.csproj.CoreCompileInputs.cache
+C:\Users\Thund\repos\CG_CodeVsZombies2\CG_CodeVsZombies2\obj\Debug\net6.0\CG_CodeVsZombies2.dll
+C:\Users\Thund\repos\CG_CodeVsZombies2\CG_CodeVsZombies2\obj\Debug\net6.0\refint\CG_CodeVsZombies2.dll
+C:\Users\Thund\repos\CG_CodeVsZombies2\CG_CodeVsZombies2\obj\Debug\net6.0\CG_CodeVsZombies2.pdb
+C:\Users\Thund\repos\CG_CodeVsZombies2\CG_CodeVsZombies2\obj\Debug\net6.0\CG_CodeVsZombies2.genruntimeconfig.cache
+C:\Users\Thund\repos\CG_CodeVsZombies2\CG_CodeVsZombies2\obj\Debug\net6.0\ref\CG_CodeVsZombies2.dll
