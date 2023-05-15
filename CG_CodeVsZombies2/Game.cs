@@ -2,10 +2,10 @@
 
 namespace CG_CodeVsZombies2
 {
-    public struct Game : IClonable<Game>
+    public struct Game
     {
-        public Dictionary<int, Zombie> Zombies { get; set; }
-        public Dictionary<int, Human> Humans { get; set; }
+        public Dictionary<byte, Location> Zombies { get; set; }
+        public Dictionary<byte, Location> Humans { get; set; }
 
         public int Score { get; set; }
 
@@ -13,13 +13,24 @@ namespace CG_CodeVsZombies2
 
         public bool PlayerWon { get; set; }
 
-        public Player Player { get; set; }
+        public Location PlayerLocation { get; set; }
 
-        public Game(Player player)
+        public Game(Location playerLocation)
         {
-            Zombies = new Dictionary<int, Zombie>();
-            Humans = new Dictionary<int, Human>();
-            Player = player;
+            Zombies = new Dictionary<byte, Location>();
+            Humans = new Dictionary<byte, Location>();
+            PlayerLocation = playerLocation;
+            Score = 0;
+            GameEnded = false;
+            PlayerWon = false;
+        }
+
+        public Game(Location playerLocation, Dictionary<byte, Location> previousZombies,
+            Dictionary<byte, Location> previousHumans)
+        {
+            Zombies = new Dictionary<byte, Location>(previousZombies);
+            Humans = new Dictionary<byte, Location>(previousHumans);
+            PlayerLocation = playerLocation;
             Score = 0;
             GameEnded = false;
             PlayerWon = false;
@@ -27,17 +38,7 @@ namespace CG_CodeVsZombies2
 
         public Game Clone()
         {
-            var newGame = new Game(Player.Clone());
-
-            foreach (var zombie in Zombies)
-            {
-                newGame.Zombies.Add(zombie.Key, zombie.Value.Clone());
-            }
-
-            foreach (var human in Humans)
-            {
-                newGame.Humans.Add(human.Key, human.Value);
-            }
+            var newGame = new Game(PlayerLocation, Zombies, Humans);
 
             newGame.Score = Score;
 

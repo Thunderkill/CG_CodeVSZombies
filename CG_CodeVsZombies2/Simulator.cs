@@ -5,13 +5,14 @@ namespace CG_CodeVsZombies2
 {
     public class Simulator
     {
-        public static void Simulate(ref Game game, ILocatable playerTarget)
+        public static void Simulate(ref Game game, Location playerTarget)
         {
             // 1. First we move the zombies towards the closest human or player
-            foreach (var zombie in game.Zombies.Values)
+            foreach (var pair in game.Zombies)
             {
+                var zombie = pair.Value;
                 double closestDist = double.MaxValue;
-                ILocatable closestEntity = default;
+                Location closestEntity = default;
                 foreach (var human in game.Humans.Values)
                 {
                     var dist = DistanceUtils.FastDistanceTo(zombie, human);
@@ -22,56 +23,58 @@ namespace CG_CodeVsZombies2
                     }
                 }
 
-                var playerDist = DistanceUtils.FastDistanceTo(game.Player, zombie);
+                var playerDist = DistanceUtils.FastDistanceTo(game.PlayerLocation, zombie);
                 if (playerDist < closestDist)
                 {
-                    closestEntity = game.Player;
+                    closestEntity = game.PlayerLocation;
                 }
 
+                Location newLocation;
                 if (closestDist < 160000)
                 {
-                    zombie.X = closestEntity!.X;
-                    zombie.Y = closestEntity!.Y;
+                    newLocation = closestEntity;
                 }
                 else
                 {
-                    EntityUtils.MoveTowards(zombie, closestEntity!, 400);
+                    newLocation = EntityUtils.MoveTowards(zombie, closestEntity, 400);
                 }
+
+                game.Zombies[pair.Key] = newLocation;
             }
 
             // 2. Move the player
-            if (DistanceUtils.FastDistanceTo(game.Player, playerTarget) < 1000000)
+            if (DistanceUtils.FastDistanceTo(game.PlayerLocation, playerTarget) < 1000000)
             {
-                game.Player.X = playerTarget.X;
-                game.Player.Y = playerTarget.Y;
+                game.PlayerLocation = playerTarget;
             }
             else
             {
-                EntityUtils.MoveTowards(game.Player, playerTarget, 1000);
+                var newLocation = EntityUtils.MoveTowards(game.PlayerLocation, playerTarget, 1000);
+                game.PlayerLocation = newLocation;
             }
 
 
             // 3. Kill the zombies that are close to the player
             var zombiesKilled = 0;
-            foreach (var zombie in game.Zombies.Values)
+            foreach (var zombiePair in game.Zombies)
             {
-                var dist = DistanceUtils.FastDistanceTo(game.Player, zombie);
+                var dist = DistanceUtils.FastDistanceTo(game.PlayerLocation, zombiePair.Value);
                 if (dist > 4000000) continue;
 
                 game.Score += game.Humans.Count * game.Humans.Count * 10 *
                               NumberUtils.Fibonacci(zombiesKilled + 2);
-                game.Zombies.Remove(zombie.Id);
+                game.Zombies.Remove(zombiePair.Key);
                 zombiesKilled++;
             }
 
             // 4. Kill all the humans that are close to the zombies
             foreach (var zombie in game.Zombies.Values)
             {
-                foreach (var human in game.Humans.Values)
+                foreach (var humanPair in game.Humans)
                 {
-                    if (zombie.X == human.X && zombie.Y == human.Y)
+                    if (zombie.X == humanPair.Value.X && zombie.Y == humanPair.Value.Y)
                     {
-                        game.Humans.Remove(human.Id);
+                        game.Humans.Remove(humanPair.Key);
                     }
                 }
             }

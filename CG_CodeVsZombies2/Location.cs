@@ -1,11 +1,13 @@
-﻿namespace CG_CodeVsZombies2
-{
-    public class Location : ILocatable
-    {
-        public int X { get; set; }
-        public int Y { get; set; }
+﻿using System;
 
-        public Location(int x, int y)
+namespace CG_CodeVsZombies2
+{
+    public struct Location : ILocatable
+    {
+        public short X { get; set; }
+        public short Y { get; set; }
+
+        public Location(short x, short y)
         {
             X = x;
             Y = y;

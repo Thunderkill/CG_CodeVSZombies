@@ -4,7 +4,7 @@ namespace CG_CodeVsZombies2.Utils
 {
     public class EntityUtils
     {
-        public static void MoveTowards(ILocatable from, ILocatable to, double units)
+        public static Location MoveTowards(ILocatable from, ILocatable to, double units)
         {
             // Calculate the direction vector from 'from' to 'to'
             double deltaX = to.X - from.X;
@@ -22,8 +22,9 @@ namespace CG_CodeVsZombies2.Utils
             double newY = from.Y + unitDeltaY * units;
 
             // Set the new coordinates for 'from' (replace the below lines with your actual code)
-            from.X = (int)newX;
-            from.Y = (int)newY;
+            //from.X = (short)newX;
+            //from.Y = (short)newY;
+            return new Location((short)newX, (short)newY);
         }
 
         /*public static Location GetValidRandomLocation(ILocatable start, int maxRange)
@@ -38,8 +39,8 @@ namespace CG_CodeVsZombies2.Utils
             for (int i = 0; i < 10; i++)
             {
                 var dir = AllowedDirections.GetRandom();
-                var x = start.X + dir.X;
-                var y = start.Y + dir.Y;
+                short x = (short)(start.X + dir.X);
+                short y = (short)(start.Y + dir.Y);
                 if (x < 0 || x > 16000 || y < 0 || y > 9000) continue;
                 return new Location(x, y);
             }

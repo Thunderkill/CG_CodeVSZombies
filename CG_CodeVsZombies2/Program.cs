@@ -11,8 +11,7 @@ namespace CG_CodeVsZombies2
         {
             string[] inputs;
 
-            Player player = new Player(0, 0);
-            Game game = new Game(player);
+            Game game = new Game(new Location(0, 0));
             bool initialized = false;
             int maxSimulatedRounds = 100;
             Simulation? previousBestSimulation = null;
@@ -23,20 +22,19 @@ namespace CG_CodeVsZombies2
                 if (!initialized)
                 {
                     inputs = Console.ReadLine().Split(' ');
-                    int x = int.Parse(inputs[0]);
-                    int y = int.Parse(inputs[1]);
-                    player.X = x;
-                    player.Y = y;
+                    short x = short.Parse(inputs[0]);
+                    short y = short.Parse(inputs[1]);
+                    game = new Game(new Location(x, y));
 
                     int humanCount = int.Parse(Console.ReadLine());
 
                     for (int i = 0; i < humanCount; i++)
                     {
                         inputs = Console.ReadLine().Split(' ');
-                        int humanId = int.Parse(inputs[0]);
-                        int humanX = int.Parse(inputs[1]);
-                        int humanY = int.Parse(inputs[2]);
-                        var newHuman = new Human(humanId, humanX, humanY);
+                        byte humanId = byte.Parse(inputs[0]);
+                        short humanX = short.Parse(inputs[1]);
+                        short humanY = short.Parse(inputs[2]);
+                        var newHuman = new Location(humanX, humanY);
                         game.Humans.Add(humanId, newHuman);
                     }
 
@@ -44,12 +42,10 @@ namespace CG_CodeVsZombies2
                     for (int i = 0; i < zombieCount; i++)
                     {
                         inputs = Console.ReadLine().Split(' ');
-                        int zombieId = int.Parse(inputs[0]);
-                        int zombieX = int.Parse(inputs[1]);
-                        int zombieY = int.Parse(inputs[2]);
-                        int zombieXNext = int.Parse(inputs[3]);
-                        int zombieYNext = int.Parse(inputs[4]);
-                        var newZombie = new Zombie(zombieId, zombieX, zombieY, zombieXNext, zombieYNext);
+                        byte zombieId = byte.Parse(inputs[0]);
+                        short zombieX = short.Parse(inputs[1]);
+                        short zombieY = short.Parse(inputs[2]);
+                        var newZombie = new Location(zombieX, zombieY);
                         game.Zombies.Add(zombieId, newZombie);
                     }
 
@@ -81,18 +77,24 @@ namespace CG_CodeVsZombies2
 
                 for (int evolution = 0; evolution < 100000; evolution++)
                 {
-                    if (watch.ElapsedMilliseconds > 98)
+                    if (watch.ElapsedMilliseconds > 96)
                     {
                         Console.Error.WriteLine("Managed to do {0} evolutions", evolution);
                         break;
                     }
 
-                    var evolutionGame = game.Clone();
+                    Game evolutionGame = game.Clone();
                     var moves = new List<Location>();
 
                     for (int round = 0; round < maxSimulatedRounds; round++)
                     {
-                        var newLocation = EntityUtils.GetValidRandomLocation(evolutionGame.Player);
+                        if (watch.ElapsedMilliseconds > 98)
+                        {
+                            Console.Error.WriteLine("Had to break mid evolution");
+                            break;
+                        }
+
+                        var newLocation = EntityUtils.GetValidRandomLocation(evolutionGame.PlayerLocation);
                         Simulator.Simulate(ref evolutionGame, newLocation);
                         moves.Add(newLocation);
                         if (evolutionGame.GameEnded)
@@ -118,6 +120,32 @@ namespace CG_CodeVsZombies2
                 else
                 {
                     previousBestSimulation = bestSimulation;
+                }
+
+                if (bestSimulationScore == int.MinValue)
+                {
+                    Console.Error.WriteLine("We did not find a solution");
+                    if (game.Humans.Count == 3)
+                    {
+                        Console.Error.WriteLine("Just going towards #1");
+                        Simulator.Simulate(ref game, game.Humans[1]);
+                        Console.WriteLine(game.Humans[1].ToString());
+                        return;
+                    }
+
+                    Double closestHumanDist = Double.MaxValue;
+                    Location? closestHuman = null;
+                    foreach (var human in game.Humans)
+                    {
+                        var dist = DistanceUtils.FastDistanceTo(human.Value, game.PlayerLocation);
+                        if (dist > closestHumanDist) continue;
+                        closestHumanDist = dist;
+                        closestHuman = human.Value;
+                    }
+
+                    Simulator.Simulate(ref game, closestHuman!.Value);
+                    Console.WriteLine(closestHuman!.Value.ToString());
+                    return;
                 }
 
                 Console.Error.WriteLine(
