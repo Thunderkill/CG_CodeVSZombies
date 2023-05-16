@@ -59,7 +59,7 @@ namespace CG_CodeVsZombies2
                 if (dist > 4000000) continue;
 
                 game.Score += game.Humans.Count * game.Humans.Count * 10 *
-                              NumberUtils.Fibonacci(zombiesKilled + 2);
+                              NumberUtils.FibonacciNumbers[zombiesKilled + 2];
                 game.Zombies.Remove(zombie.Id);
                 zombiesKilled++;
             }
@@ -72,6 +72,7 @@ namespace CG_CodeVsZombies2
                     if (zombie.X == human.X && zombie.Y == human.Y)
                     {
                         game.Humans.Remove(human.Id);
+                        break;
                     }
                 }
             }

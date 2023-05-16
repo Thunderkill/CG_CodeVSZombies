@@ -1,6 +1,6 @@
 ﻿namespace CG_CodeVsZombies2
 {
-    public class Location : ILocatable
+    public struct Location : ILocatable
     {
         public int X { get; set; }
         public int Y { get; set; }

@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CG_CodeVsZombies2", "CG_CodeVsZombies2\CG_CodeVsZombies2.csproj", "{DA92E6CF-C9E3-4070-9A12-2308D5F28033}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CG_CodeVsZombies2Benchmarks", "CG_CodeVsZombies2Benchmarks\CG_CodeVsZombies2Benchmarks.csproj", "{426B5923-1C02-4B49-BF1C-275A2AB69F32}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{DA92E6CF-C9E3-4070-9A12-2308D5F28033}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DA92E6CF-C9E3-4070-9A12-2308D5F28033}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DA92E6CF-C9E3-4070-9A12-2308D5F28033}.Release|Any CPU.Build.0 = Release|Any CPU
+		{426B5923-1C02-4B49-BF1C-275A2AB69F32}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{426B5923-1C02-4B49-BF1C-275A2AB69F32}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{426B5923-1C02-4B49-BF1C-275A2AB69F32}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{426B5923-1C02-4B49-BF1C-275A2AB69F32}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

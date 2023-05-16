@@ -81,7 +81,7 @@ namespace CG_CodeVsZombies2
 
                 for (int evolution = 0; evolution < 100000; evolution++)
                 {
-                    if (watch.ElapsedMilliseconds > 98)
+                    if (watch.ElapsedMilliseconds > 90)
                     {
                         Console.Error.WriteLine("Managed to do {0} evolutions", evolution);
                         break;
@@ -92,6 +92,11 @@ namespace CG_CodeVsZombies2
 
                     for (int round = 0; round < maxSimulatedRounds; round++)
                     {
+                        if (watch.ElapsedMilliseconds > 90)
+                        {
+                            break;
+                        }
+
                         var newLocation = EntityUtils.GetValidRandomLocation(evolutionGame.Player);
                         Simulator.Simulate(ref evolutionGame, newLocation);
                         moves.Add(newLocation);
@@ -120,6 +125,32 @@ namespace CG_CodeVsZombies2
                     previousBestSimulation = bestSimulation;
                 }
 
+                if (bestSimulationScore == int.MinValue)
+                {
+                    Console.Error.WriteLine("We did not find a solution");
+                    if (game.Humans.Count == 3)
+                    {
+                        Console.Error.WriteLine("Just going towards #1");
+                        Simulator.Simulate(ref game, game.Humans[1]);
+                        Console.WriteLine(game.Humans[1].ToString());
+                        return;
+                    }
+
+                    Double closestHumanDist = Double.MaxValue;
+                    Human? closestHuman = null;
+                    foreach (var human in game.Humans)
+                    {
+                        var dist = DistanceUtils.FastDistanceTo(human.Value, game.Player);
+                        if (dist > closestHumanDist) continue;
+                        closestHumanDist = dist;
+                        closestHuman = human.Value;
+                    }
+
+                    Simulator.Simulate(ref game, closestHuman!.Value);
+                    Console.WriteLine(closestHuman!.Value.ToString());
+                    return;
+                }
+
                 Console.Error.WriteLine(
                     "Best simulation has a ending score of {0} after {1} moves. There will be {2} humans left",
                     bestSimulation.Game.Score, bestSimulation.Moves.Count, bestSimulation.Game.Humans.Count);
@@ -127,30 +158,9 @@ namespace CG_CodeVsZombies2
                 var target = bestSimulation.Moves[0];
 
                 Simulator.Simulate(ref game, target);
-                /*Console.Error.WriteLine(
-                    $"Next round we should have {simulation.Score} score. {simulation.Humans.Count} humans alive");*/
-
-                /*if (simulation.GameEnded)
-                {
-                    Console.Error.WriteLine("Game ended in the next round");
-                }*/
-
-
-                /*Console.Error.WriteLine("Player is at {0}, {1}", player.X, player.Y);
-
-                foreach (var human in game.Humans)
-                {
-                    Console.Error.WriteLine(
-                        $"Human {human.Key} is at {human.Value.X}, {human.Value.Y} and is {(human.Value.Alive ? "alive" : "dead")}");
-                }
-
-                foreach (var zombie in game.Zombies)
-                {
-                    Console.Error.WriteLine(
-                        $"Zombie {zombie.Key} is at {zombie.Value.X}, {zombie.Value.Y}");
-                }*/
 
                 Console.WriteLine(target.ToString()); // Your destination coordinates
+                Console.Error.WriteLine(watch.ElapsedMilliseconds.ToString());
             }
         }
     }

@@ -2,20 +2,10 @@
 {
     public static class NumberUtils
     {
-        public static int Fibonacci(int n)
+        public static int[] FibonacciNumbers = new int[]
         {
-            if (n <= 1) return n;
-            int fib = 1;
-            int prevFib = 1;
-
-            for (int i = 2; i < n; i++)
-            {
-                int temp = fib;
-                fib += prevFib;
-                prevFib = temp;
-            }
-
-            return fib;
-        }
+            0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946, 17711,
+            28657, 46368, 75025
+        };
     }
 }

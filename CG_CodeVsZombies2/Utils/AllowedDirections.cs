@@ -31,7 +31,7 @@ namespace CG_CodeVsZombies2.Utils
 
         public static Location GetRandom()
         {
-            return Get[Random.Shared.Next(0, Get.Length)];
+            return Get[Randomizer.Get.Next(0, Get.Length)];
         }
     }
 }

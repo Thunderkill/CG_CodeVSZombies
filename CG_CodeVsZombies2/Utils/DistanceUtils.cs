@@ -11,10 +11,5 @@ namespace CG_CodeVsZombies2.Utils
 
             return deltaX * deltaX + deltaY * deltaY;
         }
-
-        public static double DistanceTo(ILocatable from, ILocatable to)
-        {
-            return Math.Sqrt(FastDistanceTo(from, to));
-        }
     }
 }

@@ -49,6 +49,10 @@ Id = id;
 X = x;
 Y = y;
 }
+public override string ToString()
+{
+return $"{X} {Y}";
+}
 }
 public interface IClonable<T>
 {
@@ -63,7 +67,7 @@ public interface ILocatable
 public int X { get; set; }
 public int Y { get; set; }
 }
-public class Location : ILocatable
+public struct Location : ILocatable
 {
 public int X { get; set; }
 public int Y { get; set; }
@@ -156,7 +160,7 @@ var bestSimulationScore = int.MinValue;
 Simulation bestSimulation = default;
 for (int evolution = 0; evolution < 100000; evolution++)
 {
-if (watch.ElapsedMilliseconds > 98)
+if (watch.ElapsedMilliseconds > 90)
 {
 Console.Error.WriteLine("Managed to do {0} evolutions", evolution);
 break;
@@ -165,6 +169,10 @@ var evolutionGame = game.Clone();
 var moves = new List<Location>();
 for (int round = 0; round < maxSimulatedRounds; round++)
 {
+if (watch.ElapsedMilliseconds > 90)
+{
+break;
+}
 var newLocation = EntityUtils.GetValidRandomLocation(evolutionGame.Player);
 Simulator.Simulate(ref evolutionGame, newLocation);
 moves.Add(newLocation);
@@ -190,31 +198,42 @@ else
 {
 previousBestSimulation = bestSimulation;
 }
+if (bestSimulationScore == int.MinValue)
+{
+Console.Error.WriteLine("We did not find a solution");
+if (game.Humans.Count == 3)
+{
+Console.Error.WriteLine("Just going towards #1");
+Simulator.Simulate(ref game, game.Humans[1]);
+Console.WriteLine(game.Humans[1].ToString());
+return;
+}
+Double closestHumanDist = Double.MaxValue;
+Human? closestHuman = null;
+foreach (var human in game.Humans)
+{
+var dist = DistanceUtils.FastDistanceTo(human.Value, game.Player);
+if (dist > closestHumanDist) continue;
+closestHumanDist = dist;
+closestHuman = human.Value;
+}
+Simulator.Simulate(ref game, closestHuman!.Value);
+Console.WriteLine(closestHuman!.Value.ToString());
+return;
+}
 Console.Error.WriteLine(
 "Best simulation has a ending score of {0} after {1} moves. There will be {2} humans left",
 bestSimulation.Game.Score, bestSimulation.Moves.Count, bestSimulation.Game.Humans.Count);
 var target = bestSimulation.Moves[0];
 Simulator.Simulate(ref game, target);
-/*Console.Error.WriteLine(
-$"Next round we should have {simulation.Score} score. {simulation.Humans.Count} humans alive");*/
-/*if (simulation.GameEnded)
-{
-Console.Error.WriteLine("Game ended in the next round");
-}*/
-/*Console.Error.WriteLine("Player is at {0}, {1}", player.X, player.Y);
-foreach (var human in game.Humans)
-{
-Console.Error.WriteLine(
-$"Human {human.Key} is at {human.Value.X}, {human.Value.Y} and is {(human.Value.Alive ? "alive" : "dead")}");
-}
-foreach (var zombie in game.Zombies)
-{
-Console.Error.WriteLine(
-$"Zombie {zombie.Key} is at {zombie.Value.X}, {zombie.Value.Y}");
-}*/
 Console.WriteLine(target.ToString()); // Your destination coordinates
+Console.Error.WriteLine(watch.ElapsedMilliseconds.ToString());
 }
 }
+}
+public class Randomizer
+{
+public static Random Get = new Random(1);
 }
 public struct Simulation
 {
@@ -276,7 +295,7 @@ foreach (var zombie in game.Zombies.Values)
 var dist = DistanceUtils.FastDistanceTo(game.Player, zombie);
 if (dist > 4000000) continue;
 game.Score += game.Humans.Count * game.Humans.Count * 10 *
-NumberUtils.Fibonacci(zombiesKilled + 2);
+NumberUtils.FibonacciNumbers[zombiesKilled + 2];
 game.Zombies.Remove(zombie.Id);
 zombiesKilled++;
 }
@@ -288,6 +307,7 @@ foreach (var human in game.Humans.Values)
 if (zombie.X == human.X && zombie.Y == human.Y)
 {
 game.Humans.Remove(human.Id);
+break;
 }
 }
 }
@@ -350,7 +370,7 @@ new Location((int)Math.Round(1000 * Math.Cos(Math.PI / 4)),
 };
 public static Location GetRandom()
 {
-return Get[Random.Shared.Next(0, Get.Length)];
+return Get[Randomizer.Get.Next(0, Get.Length)];
 }
 }
 public static class DistanceUtils
@@ -361,34 +381,30 @@ int deltaX = to.X - from.X;
 int deltaY = to.Y - from.Y;
 return deltaX * deltaX + deltaY * deltaY;
 }
-public static double DistanceTo(ILocatable from, ILocatable to)
-{
-return Math.Sqrt(FastDistanceTo(from, to));
-}
 }
 public class EntityUtils
 {
-public static void MoveTowards(ILocatable from, ILocatable to, double units)
+public static void MoveTowards(ILocatable from, ILocatable to, float units)
 {
 // Calculate the direction vector from 'from' to 'to'
-double deltaX = to.X - from.X;
-double deltaY = to.Y - from.Y;
+float deltaX = to.X - from.X;
+float deltaY = to.Y - from.Y;
 // Calculate the length of the direction vector
-double length = Math.Sqrt(deltaX * deltaX + deltaY * deltaY);
+float length = MathF.Sqrt(deltaX * deltaX + deltaY * deltaY);
 // Normalize the direction vector to get a unit vector
-double unitDeltaX = deltaX / length;
-double unitDeltaY = deltaY / length;
+float unitDeltaX = deltaX / length;
+float unitDeltaY = deltaY / length;
 // Calculate the new coordinates
-double newX = from.X + unitDeltaX * units;
-double newY = from.Y + unitDeltaY * units;
+float newX = from.X + unitDeltaX * units;
+float newY = from.Y + unitDeltaY * units;
 // Set the new coordinates for 'from' (replace the below lines with your actual code)
 from.X = (int)newX;
 from.Y = (int)newY;
 }
 /*public static Location GetValidRandomLocation(ILocatable start, int maxRange)
 {
-var x = Random.Shared.Next(Math.Max(start.X - maxRange, 0), Math.Min(start.X + maxRange, 16000));
-var y = Random.Shared.Next(Math.Max(start.Y - maxRange, 0), Math.Min(start.Y + maxRange, 9000));
+var x = Randomizer.Get.Next(Math.Max(start.X - maxRange, 0), Math.Min(start.X + maxRange, 16000));
+var y = Randomizer.Get.Next(Math.Max(start.Y - maxRange, 0), Math.Min(start.Y + maxRange, 9000));
 return new Location(x, y);
 }*/
 public static Location GetValidRandomLocation(ILocatable start)
@@ -406,18 +422,10 @@ return new Location(start.X, start.Y);
 }
 public static class NumberUtils
 {
-public static int Fibonacci(int n)
+public static int[] FibonacciNumbers = new int[]
 {
-if (n <= 1) return n;
-int fib = 1;
-int prevFib = 1;
-for (int i = 2; i < n; i++)
-{
-int temp = fib;
-fib += prevFib;
-prevFib = temp;
-}
-return fib;
-}
+0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946, 17711,
+28657, 46368, 75025
+};
 }
 }
