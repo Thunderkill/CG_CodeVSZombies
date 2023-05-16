@@ -6,15 +6,29 @@ namespace CG_CodeVsZombies2Benchmarks;
 
 public class Benchmarks
 {
-    /*[Benchmark]
-    public void FibonacciOriginal()
+
+    private Player player1;
+    private Location player2;
+    
+    [GlobalSetup]
+    public void Setup()
     {
-        var asd = NumberUtils.Fibonacci(2);
-    }*/
+        player1 = new Player(0, 0);
+        player2 = new Location(0, 0);
+    }
+    
+    [Benchmark]
+    public void New()
+    {
+        player2 = new Location(15, 15);
+        var asd = player2.X;
+    }
 
     [Benchmark]
-    public void FibonacciPrecomputed()
+    public void Old()
     {
-        var asd = NumberUtils.FibonacciNumbers[2];
+        player1.X = 15;
+        player1.Y = 15;
+        var asd = player1.X;
     }
 }

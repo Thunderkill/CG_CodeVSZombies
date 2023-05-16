@@ -58,8 +58,7 @@ namespace CG_CodeVsZombies2
                 var dist = DistanceUtils.FastDistanceTo(game.Player, zombie);
                 if (dist > 4000000) continue;
 
-                game.Score += game.Humans.Count * game.Humans.Count * 10 *
-                              NumberUtils.FibonacciNumbers[zombiesKilled + 2];
+                game.Score += NumberUtils.Score[game.Humans.Count] * NumberUtils.FibonacciNumbers[zombiesKilled];
                 game.Zombies.Remove(zombie.Id);
                 zombiesKilled++;
             }
