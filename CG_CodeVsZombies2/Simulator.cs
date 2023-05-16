@@ -28,27 +28,11 @@ namespace CG_CodeVsZombies2
                     closestEntity = game.Player;
                 }
 
-                if (closestDist < 160000)
-                {
-                    zombie.X = closestEntity!.X;
-                    zombie.Y = closestEntity!.Y;
-                }
-                else
-                {
-                    EntityUtils.MoveTowards(zombie, closestEntity!, 400);
-                }
+                EntityUtils.MoveTowards(zombie, closestEntity!, 400);
             }
 
             // 2. Move the player
-            if (DistanceUtils.FastDistanceTo(game.Player, playerTarget) < 1000000)
-            {
-                game.Player.X = playerTarget.X;
-                game.Player.Y = playerTarget.Y;
-            }
-            else
-            {
-                EntityUtils.MoveTowards(game.Player, playerTarget, 1000);
-            }
+            EntityUtils.MoveTowards(game.Player, playerTarget, 1000);
 
 
             // 3. Kill the zombies that are close to the player

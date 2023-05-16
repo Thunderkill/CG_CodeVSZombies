@@ -268,26 +268,10 @@ if (playerDist < closestDist)
 {
 closestEntity = game.Player;
 }
-if (closestDist < 160000)
-{
-zombie.X = closestEntity!.X;
-zombie.Y = closestEntity!.Y;
-}
-else
-{
 EntityUtils.MoveTowards(zombie, closestEntity!, 400);
 }
-}
 // 2. Move the player
-if (DistanceUtils.FastDistanceTo(game.Player, playerTarget) < 1000000)
-{
-game.Player.X = playerTarget.X;
-game.Player.Y = playerTarget.Y;
-}
-else
-{
 EntityUtils.MoveTowards(game.Player, playerTarget, 1000);
-}
 // 3. Kill the zombies that are close to the player
 var zombiesKilled = 0;
 foreach (var zombie in game.Zombies.Values)
@@ -389,7 +373,14 @@ public static void MoveTowards(ILocatable from, ILocatable to, float units)
 float deltaX = to.X - from.X;
 float deltaY = to.Y - from.Y;
 // Calculate the length of the direction vector
-float length = MathF.Sqrt(deltaX * deltaX + deltaY * deltaY);
+float lengthSq = deltaX * deltaX + deltaY * deltaY;
+float length = MathF.Sqrt(lengthSq);
+if (length < units)
+{
+from.X = to.X;
+from.Y = to.Y;
+return;
+}
 // Normalize the direction vector to get a unit vector
 float unitDeltaX = deltaX / length;
 float unitDeltaY = deltaY / length;

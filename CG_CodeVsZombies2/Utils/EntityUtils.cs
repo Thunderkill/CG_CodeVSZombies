@@ -11,7 +11,16 @@ namespace CG_CodeVsZombies2.Utils
             float deltaY = to.Y - from.Y;
 
             // Calculate the length of the direction vector
-            float length = MathF.Sqrt(deltaX * deltaX + deltaY * deltaY);
+
+            float lengthSq = deltaX * deltaX + deltaY * deltaY;
+            float length = MathF.Sqrt(lengthSq);
+
+            if (length < units)
+            {
+                from.X = to.X;
+                from.Y = to.Y;
+                return;
+            }
 
             // Normalize the direction vector to get a unit vector
             float unitDeltaX = deltaX / length;
