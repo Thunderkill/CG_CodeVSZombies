@@ -99,12 +99,14 @@ internal class Program
 {
 public static void Main()
 {
+Stopwatch watch = new Stopwatch();
 string[] inputs;
 Player player = new Player(0, 0);
 Game game = new Game(player);
 bool initialized = false;
 int maxSimulatedRounds = 100;
 Simulation? previousBestSimulation = null;
+Console.Error.WriteLine("1. Elapsed: " + watch.ElapsedMilliseconds + "ms");
 // game loop
 while (true)
 {
@@ -137,10 +139,12 @@ int zombieYNext = int.Parse(inputs[4]);
 var newZombie = new Zombie(zombieId, zombieX, zombieY, zombieXNext, zombieYNext);
 game.Zombies.Add(zombieId, newZombie);
 }
+Console.Error.WriteLine("First init took: " + watch.ElapsedMilliseconds + "ms");
 initialized = true;
 }
 else
 {
+watch.Restart();
 // This is a dummy reader that is only used after reading initial positions, cause we can fully simulate the rest
 Console.ReadLine();
 int humanCount = int.Parse(Console.ReadLine());
@@ -153,23 +157,25 @@ for (int i = 0; i < zombieCount; i++)
 {
 Console.ReadLine();
 }
+Console.Error.WriteLine("Reading inputs took: " + watch.ElapsedMilliseconds + "ms");
 }
-var watch = Stopwatch.StartNew();
+watch.Restart();
 // DO ACTIONS HERE
 var bestSimulationScore = int.MinValue;
 Simulation bestSimulation = default;
 for (int evolution = 0; evolution < 100000; evolution++)
 {
-if (watch.ElapsedMilliseconds > 90)
+if (watch.ElapsedMilliseconds > 98)
 {
 Console.Error.WriteLine("Managed to do {0} evolutions", evolution);
+Console.Error.WriteLine("EVOLUTIONS: {0}", evolution);
 break;
 }
 var evolutionGame = game.Clone();
 var moves = new List<Location>();
 for (int round = 0; round < maxSimulatedRounds; round++)
 {
-if (watch.ElapsedMilliseconds > 90)
+if (watch.ElapsedMilliseconds > 98)
 {
 break;
 }
@@ -201,14 +207,7 @@ previousBestSimulation = bestSimulation;
 if (bestSimulationScore == int.MinValue)
 {
 Console.Error.WriteLine("We did not find a solution");
-if (game.Humans.Count == 3)
-{
-Console.Error.WriteLine("Just going towards #1");
-Simulator.Simulate(ref game, game.Humans[1]);
-Console.WriteLine(game.Humans[1].ToString());
-return;
-}
-Double closestHumanDist = Double.MaxValue;
+float closestHumanDist = float.MaxValue;
 Human? closestHuman = null;
 foreach (var human in game.Humans)
 {
@@ -219,7 +218,8 @@ closestHuman = human.Value;
 }
 Simulator.Simulate(ref game, closestHuman!.Value);
 Console.WriteLine(closestHuman!.Value.ToString());
-return;
+Console.Error.WriteLine(watch.ElapsedMilliseconds.ToString());
+continue;
 }
 Console.Error.WriteLine(
 "Best simulation has a ending score of {0} after {1} moves. There will be {2} humans left",
@@ -233,7 +233,7 @@ Console.Error.WriteLine(watch.ElapsedMilliseconds.ToString());
 }
 public class Randomizer
 {
-public static Random Get = new Random(1);
+public static Random Get = new (1);
 }
 public struct Simulation
 {
@@ -328,28 +328,17 @@ return new Zombie(Id, X, Y, NextX, NextY);
 }
 public class AllowedDirections
 {
-/*public static Location[] Get = new[]
+public static Location[] Get =
 {
-new Location(1000, 0),
-new Location(-1000, 0),
-new Location(0, 1000),
-new Location(0, -1000)
-};*/
-public static Location[] Get = new[]
-{
-new Location(0, 0), // Stay
-new Location(1000, 0), // Right
-new Location((int)Math.Round(1000 * Math.Cos(Math.PI / 4)),
-(int)Math.Round(1000 * Math.Sin(Math.PI / 4))), // Upper right
-new Location(0, 1000), // Up
-new Location((int)Math.Round(-1000 * Math.Cos(Math.PI / 4)),
-(int)Math.Round(1000 * Math.Sin(Math.PI / 4))), // Upper left
-new Location(-1000, 0), // Left
-new Location((int)Math.Round(-1000 * Math.Cos(Math.PI / 4)),
-(int)Math.Round(-1000 * Math.Sin(Math.PI / 4))), // Lower left
-new Location(0, -1000), // Down
-new Location((int)Math.Round(1000 * Math.Cos(Math.PI / 4)),
-(int)Math.Round(-1000 * Math.Sin(Math.PI / 4))) // Lower right
+new (0, 0), // Stay
+new (1000, 0), // Right
+new (707,707), // Upper right
+new (0, 1000), // Up
+new (-707,707), // Upper left
+new (-1000, 0), // Left
+new (-707, -707), // Lower left
+new (0, -1000), // Down
+new (707, -707) // Lower right
 };
 public static Location GetRandom()
 {
@@ -358,7 +347,7 @@ return Get[Randomizer.Get.Next(0, Get.Length)];
 }
 public static class DistanceUtils
 {
-public static double FastDistanceTo(ILocatable from, ILocatable to)
+public static float FastDistanceTo(ILocatable from, ILocatable to)
 {
 int deltaX = to.X - from.X;
 int deltaY = to.Y - from.Y;
