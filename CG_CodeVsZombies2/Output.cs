@@ -106,7 +106,6 @@ Game game = new Game(player);
 bool initialized = false;
 int maxSimulatedRounds = 100;
 Simulation? previousBestSimulation = null;
-Console.Error.WriteLine("1. Elapsed: " + watch.ElapsedMilliseconds + "ms");
 // game loop
 while (true)
 {
@@ -139,12 +138,10 @@ int zombieYNext = int.Parse(inputs[4]);
 var newZombie = new Zombie(zombieId, zombieX, zombieY, zombieXNext, zombieYNext);
 game.Zombies.Add(zombieId, newZombie);
 }
-Console.Error.WriteLine("First init took: " + watch.ElapsedMilliseconds + "ms");
 initialized = true;
 }
 else
 {
-watch.Restart();
 // This is a dummy reader that is only used after reading initial positions, cause we can fully simulate the rest
 Console.ReadLine();
 int humanCount = int.Parse(Console.ReadLine());
@@ -157,7 +154,6 @@ for (int i = 0; i < zombieCount; i++)
 {
 Console.ReadLine();
 }
-Console.Error.WriteLine("Reading inputs took: " + watch.ElapsedMilliseconds + "ms");
 }
 watch.Restart();
 // DO ACTIONS HERE
