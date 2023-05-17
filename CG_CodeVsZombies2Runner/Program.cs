@@ -87,6 +87,10 @@ await foreach (var cmdEvent in game1.ListenAsync(cts.Token))
                 evolutionCounts.Add(count);
                 Console.WriteLine(count);
             }
+            if (stdErr.Text.Contains("RANDOM:"))
+            {
+                Console.WriteLine(stdErr.Text);
+            }
             break;
         case ExitedCommandEvent exited:
             Console.WriteLine($"Process exited; Code: {exited.ExitCode}");

@@ -17,7 +17,7 @@ namespace CG_CodeVsZombies2
             bool initialized = false;
             int maxSimulatedRounds = 100;
             Simulation? previousBestSimulation = null;
-
+            
             Console.Error.WriteLine("1. Elapsed: " + watch.ElapsedMilliseconds + "ms");
 
             // game loop
@@ -80,7 +80,6 @@ namespace CG_CodeVsZombies2
                 }
 
                 watch.Restart();
-
 
                 // DO ACTIONS HERE
                 var bestSimulationScore = int.MinValue;

@@ -2,7 +2,7 @@
 
 namespace CG_CodeVsZombies2
 {
-    public class Randomizer
+    public static class Randomizer
     {
         public static Random Get = new (1);
     }
