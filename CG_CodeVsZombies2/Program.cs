@@ -83,7 +83,6 @@ namespace CG_CodeVsZombies2
                 {
                     if (watch.ElapsedMilliseconds > 98)
                     {
-                        Console.Error.WriteLine("Managed to do {0} evolutions", evolution);
                         Console.Error.WriteLine("EVOLUTIONS: {0}", evolution);
                         break;
                     }

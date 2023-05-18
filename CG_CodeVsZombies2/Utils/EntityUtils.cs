@@ -4,7 +4,7 @@ namespace CG_CodeVsZombies2.Utils
 {
     public class EntityUtils
     {
-        public static void MoveTowards(ILocatable from, ILocatable to, float units)
+        public static bool MoveTowards(ILocatable from, ILocatable to, float units)
         {
             // Calculate the direction vector from 'from' to 'to'
             float deltaX = to.X - from.X;
@@ -19,7 +19,7 @@ namespace CG_CodeVsZombies2.Utils
             {
                 from.X = to.X;
                 from.Y = to.Y;
-                return;
+                return true;
             }
 
             // Normalize the direction vector to get a unit vector
@@ -33,6 +33,7 @@ namespace CG_CodeVsZombies2.Utils
             // Set the new coordinates for 'from' (replace the below lines with your actual code)
             from.X = (int)newX;
             from.Y = (int)newY;
+            return false;
         }
 
         /*public static Location GetValidRandomLocation(ILocatable start, int maxRange)

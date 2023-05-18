@@ -14,7 +14,17 @@ namespace CG_CodeVsZombies2.Utils
             new (-1000, 0), // Left
             new (-708, -708), // Lower left
             new (0, -1000), // Down
-            new (708, -708) // Lower right
+            new (708, -708), // Lower right
+            
+            // HALF STEPS BELOW
+            /*new (500, 0), // Right
+            new (354,354), // Upper right
+            new (0, 500), // Up
+            new (-354,354), // Upper left
+            new (-500, 0), // Left
+            new (-354, -354), // Lower left
+            new (0, -500), // Down
+            new (354, -354) // Lower right*/
         };
 
         public static Location GetRandom()

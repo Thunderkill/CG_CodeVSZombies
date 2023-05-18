@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System;
 using System.Diagnostics;
+using System.Linq;
 namespace CG_CodeVsZombies2
 {
 public struct Game : IClonable<Game>
@@ -163,7 +164,6 @@ for (int evolution = 0; evolution < 100000; evolution++)
 {
 if (watch.ElapsedMilliseconds > 98)
 {
-Console.Error.WriteLine("Managed to do {0} evolutions", evolution);
 Console.Error.WriteLine("EVOLUTIONS: {0}", evolution);
 break;
 }
@@ -246,10 +246,13 @@ public class Simulator
 public static void Simulate(ref Game game, ILocatable playerTarget)
 {
 // 1. First we move the zombies towards the closest human or player
+var humansToBeKilled = new Dictionary<int, int>();
 foreach (var zombie in game.Zombies.Values)
 {
 double closestDist = double.MaxValue;
 ILocatable closestEntity = default;
+var closestIsHuman = true;
+int? closesHumanId = null;
 foreach (var human in game.Humans.Values)
 {
 var dist = DistanceUtils.FastDistanceTo(zombie, human);
@@ -257,14 +260,22 @@ if (dist < closestDist)
 {
 closestDist = dist;
 closestEntity = human;
+closesHumanId = human.Id;
 }
 }
 var playerDist = DistanceUtils.FastDistanceTo(game.Player, zombie);
 if (playerDist < closestDist)
 {
 closestEntity = game.Player;
+closestIsHuman = false;
 }
-EntityUtils.MoveTowards(zombie, closestEntity!, 400);
+if (EntityUtils.MoveTowards(zombie, closestEntity!, 400))
+{
+if (closestIsHuman)
+{
+humansToBeKilled.Add(zombie.Id, closesHumanId!.Value);
+}
+}
 }
 // 2. Move the player
 EntityUtils.MoveTowards(game.Player, playerTarget, 1000);
@@ -274,12 +285,20 @@ foreach (var zombie in game.Zombies.Values)
 {
 var dist = DistanceUtils.FastDistanceTo(game.Player, zombie);
 if (dist > 4000000) continue;
+if (humansToBeKilled.ContainsKey(zombie.Id))
+{
+humansToBeKilled.Remove(zombie.Id);
+}
 game.Score += NumberUtils.Score[game.Humans.Count] * NumberUtils.FibonacciNumbers[zombiesKilled];
 game.Zombies.Remove(zombie.Id);
 zombiesKilled++;
 }
 // 4. Kill all the humans that are close to the zombies
-foreach (var zombie in game.Zombies.Values)
+foreach (var humanId in humansToBeKilled.Values)
+{
+game.Humans.Remove(humanId);
+}
+/*foreach (var zombie in game.Zombies.Values)
 {
 foreach (var human in game.Humans.Values)
 {
@@ -289,7 +308,7 @@ game.Humans.Remove(human.Id);
 break;
 }
 }
-}
+}*/
 if (game.Humans.Count == 0)
 {
 game.GameEnded = true;
@@ -334,7 +353,16 @@ new (-708,708), // Upper left
 new (-1000, 0), // Left
 new (-708, -708), // Lower left
 new (0, -1000), // Down
-new (708, -708) // Lower right
+new (708, -708), // Lower right
+// HALF STEPS BELOW
+/*new (500, 0), // Right
+new (354,354), // Upper right
+new (0, 500), // Up
+new (-354,354), // Upper left
+new (-500, 0), // Left
+new (-354, -354), // Lower left
+new (0, -500), // Down
+new (354, -354) // Lower right*/
 };
 public static Location GetRandom()
 {
@@ -352,7 +380,7 @@ return deltaX * deltaX + deltaY * deltaY;
 }
 public class EntityUtils
 {
-public static void MoveTowards(ILocatable from, ILocatable to, float units)
+public static bool MoveTowards(ILocatable from, ILocatable to, float units)
 {
 // Calculate the direction vector from 'from' to 'to'
 float deltaX = to.X - from.X;
@@ -364,7 +392,7 @@ if (length < units)
 {
 from.X = to.X;
 from.Y = to.Y;
-return;
+return true;
 }
 // Normalize the direction vector to get a unit vector
 float unitDeltaX = deltaX / length;
@@ -375,6 +403,7 @@ float newY = from.Y + unitDeltaY * units;
 // Set the new coordinates for 'from' (replace the below lines with your actual code)
 from.X = (int)newX;
 from.Y = (int)newY;
+return false;
 }
 /*public static Location GetValidRandomLocation(ILocatable start, int maxRange)
 {

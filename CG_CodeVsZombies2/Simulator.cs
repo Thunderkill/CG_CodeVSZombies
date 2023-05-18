@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using CG_CodeVsZombies2.Utils;
 
 namespace CG_CodeVsZombies2
@@ -8,10 +10,12 @@ namespace CG_CodeVsZombies2
         public static void Simulate(ref Game game, ILocatable playerTarget)
         {
             // 1. First we move the zombies towards the closest human or player
+            var humansToBeKilled = new Dictionary<int, int>();
             foreach (var zombie in game.Zombies.Values)
             {
                 double closestDist = double.MaxValue;
                 ILocatable closestEntity = default;
+                int? closestHumanId = null;
                 foreach (var human in game.Humans.Values)
                 {
                     var dist = DistanceUtils.FastDistanceTo(zombie, human);
@@ -19,6 +23,7 @@ namespace CG_CodeVsZombies2
                     {
                         closestDist = dist;
                         closestEntity = human;
+                        closestHumanId = human.Id;
                     }
                 }
 
@@ -26,9 +31,16 @@ namespace CG_CodeVsZombies2
                 if (playerDist < closestDist)
                 {
                     closestEntity = game.Player;
+                    closestHumanId = null;
                 }
 
-                EntityUtils.MoveTowards(zombie, closestEntity!, 400);
+                if (EntityUtils.MoveTowards(zombie, closestEntity!, 400))
+                {
+                    if (closestHumanId.HasValue)
+                    {
+                        humansToBeKilled.Add(zombie.Id, closestHumanId!.Value);
+                    }
+                }
             }
 
             // 2. Move the player
@@ -42,22 +54,20 @@ namespace CG_CodeVsZombies2
                 var dist = DistanceUtils.FastDistanceTo(game.Player, zombie);
                 if (dist > 4000000) continue;
 
+                if (humansToBeKilled.ContainsKey(zombie.Id))
+                {
+                    humansToBeKilled.Remove(zombie.Id);
+                }
+
                 game.Score += NumberUtils.Score[game.Humans.Count] * NumberUtils.FibonacciNumbers[zombiesKilled];
                 game.Zombies.Remove(zombie.Id);
                 zombiesKilled++;
             }
 
             // 4. Kill all the humans that are close to the zombies
-            foreach (var zombie in game.Zombies.Values)
+            foreach (var humanId in humansToBeKilled.Values)
             {
-                foreach (var human in game.Humans.Values)
-                {
-                    if (zombie.X == human.X && zombie.Y == human.Y)
-                    {
-                        game.Humans.Remove(human.Id);
-                        break;
-                    }
-                }
+                game.Humans.Remove(humanId);
             }
 
             if (game.Humans.Count == 0)
